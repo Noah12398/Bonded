@@ -1,23 +1,12 @@
 package com.example.bonded
-
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.bonded.ui.theme.BondedTheme
 
 class Login : AppCompatActivity() {
-    private lateinit var editmail:EditText
+    private lateinit var editUser:EditText
     private lateinit var editpassword:EditText
     private lateinit var login:Button
     private lateinit var signup:Button
@@ -26,11 +15,15 @@ class Login : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        editmail=findViewById(R.id.Email)
+        editUser=findViewById(R.id.Username)
         editpassword=findViewById(R.id.password)
         login=findViewById(R.id.button)
         signup=findViewById(R.id.signup)
 
+        login.setOnClickListener{
+            val intent= Intent(this,Homescreen::class.java)
+            startActivity(intent)
+        }
         signup.setOnClickListener{
             val intent= Intent(this,Signup::class.java)
             startActivity(intent)

@@ -2,4 +2,6 @@
     <string name="app_name">Bonded</string>
     <string name="title_activity_login">Login</string>
     <string name="title_activity_signup">Signup</string>
+    <string name="title_activity_main2">MainActivity2</string>
+    <string name="title_activity_home_screen">Home_screen</string>
 </resources>
