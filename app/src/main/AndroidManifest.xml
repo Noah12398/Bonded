@@ -13,10 +13,11 @@
         android:theme="@style/Theme.Bonded"
         tools:targetApi="31">
         <activity
-            android:name=".Home_screen"
-            android:exported="false"
-            android:label="@string/title_activity_home_screen"
+            android:name=".ChatActivity"
+            android:exported="true"
+            android:label="@string/title_activity_chat"
             android:theme="@style/Theme.Bonded" />
+
         <activity
             android:name=".Homescreen"
             android:exported="false"

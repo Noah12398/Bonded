@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "803736950690",
+    "project_id": "bonded-22243",
+    "storage_bucket": "bonded-22243.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803736950690:android:76e83cd1bb8fb9561204fb",
+        "android_client_info": {
+          "package_name": "com.example.bonded"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcEO5VDcI2uqp9iyFfLBWPzLjgf3dRP-w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

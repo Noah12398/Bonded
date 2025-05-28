@@ -6,7 +6,7 @@
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
-    app:strokeColor="@color/blue"
+    app:strokeColor="@color/lightblue"
     app:strokeWidth="1dp">
 
     <TextView
