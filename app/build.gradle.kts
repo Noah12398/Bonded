@@ -53,6 +53,11 @@ android {
 }
 
 dependencies {
+    implementation("io.socket:socket.io-client:2.0.1") {
+        exclude(group = "org.json", module = "json")
+    }
+
+
     implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
     implementation("com.google.firebase:firebase-analytics")
 
@@ -74,6 +79,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:23.2.1")
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
