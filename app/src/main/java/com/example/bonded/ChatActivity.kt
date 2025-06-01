@@ -10,6 +10,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.socket.client.Socket
 import org.json.JSONObject
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 
@@ -20,6 +25,8 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var socket: Socket
     private lateinit var currentUser: String
     private lateinit var targetUser: String
+    private lateinit var db: AppDatabase
+    private lateinit var messageDao: MessageDao
 
     private lateinit var messageList: RecyclerView
     private lateinit var messageInput: EditText
@@ -45,6 +52,22 @@ class ChatActivity : AppCompatActivity() {
         adapter = MessageAdapter(messages)
         messageList.layoutManager = LinearLayoutManager(this)
         messageList.adapter = adapter
+
+
+        db = AppDatabase.getDatabase(this)
+        messageDao = db.messageDao()
+
+// Load previous messages
+        GlobalScope.launch(Dispatchers.IO) {
+            val savedMessages = messageDao.getMessagesBetween(currentUser, targetUser)
+            withContext(Dispatchers.Main) {
+                messages.addAll(savedMessages.map { Message(it.content, it.isSentByCurrentUser) })
+                adapter.notifyDataSetChanged()
+                messageList.scrollToPosition(messages.size - 1)
+            }
+        }
+
+
 
         sendButton.setOnClickListener {
             val text = messageInput.text.toString().trim()
@@ -79,9 +102,21 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun addMessage(text: String, isSentByCurrentUser: Boolean) {
-        messages.add(Message(text, isSentByCurrentUser))
+        val msg = Message(text, isSentByCurrentUser)
+        messages.add(msg)
         adapter.notifyItemInserted(messages.size - 1)
         messageList.scrollToPosition(messages.size - 1)
+
+        GlobalScope.launch(Dispatchers.IO) {
+            messageDao.insertMessage(
+                MessageEntity(
+                    content = text,
+                    isSentByCurrentUser = isSentByCurrentUser,
+                    sender = if (isSentByCurrentUser) currentUser else targetUser,
+                    receiver = if (isSentByCurrentUser) targetUser else currentUser
+                )
+            )
+        }
     }
 
     override fun onDestroy() {
