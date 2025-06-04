@@ -9,14 +9,17 @@ import androidx.recyclerview.widget.RecyclerView
 class MessageAdapter(private val messages: List<Message>) : RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val messageText: TextView = itemView.findViewById(android.R.id.text1)
+        val messageText: TextView = itemView.findViewById(R.id.messageText)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-        val layout = if (viewType == 1)
-            android.R.layout.simple_list_item_1 // Sent message
-        else
-            android.R.layout.simple_list_item_2 // Received message
+        val layout = if (viewType == 1) {
+            R.layout.sentitem // Sent message
+        } else
+            // Sent message
+        {
+            R.layout.receiveitem // Received message
+        }
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
         return MessageViewHolder(view)
     }

@@ -1,10 +1,12 @@
 package com.example.bonded
+import android.util.Log
 
 import com.example.bonded.Message
 
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -79,18 +81,33 @@ class ChatActivity : AppCompatActivity() {
         }
 
         // Receive message from server
-        socket.on("private_message") { args ->
-            val data = args[0] as JSONObject
-            val fromUser = data.getString("from")
-            val message = data.getString("message")
 
-            // Only add if it's from targetUser
-            if (fromUser == targetUser) {
-                runOnUiThread {
-                    addMessage(message, false)
+// Inside your onCreate or wherever you have this listener
+                socket.on("private_message") { args ->
+                    Log.d("SocketEvent", "Received private_message event")
+
+                    try {
+                        val data = args[0] as JSONObject
+                        val fromUser = data.getString("from")
+                        val message = data.getString("message")
+
+                        Log.d("SocketEvent", "Message received from: $fromUser | message: $message")
+
+                        // Only add if it's from targetUser
+                        if (fromUser == targetUser) {
+                            Log.d("SocketEvent", "Message accepted from targetUser: $targetUser")
+                            runOnUiThread {
+                                addMessage(message, false)
+                            }
+                        } else {
+                            Log.d("SocketEvent", "Message ignored from non-target user: $fromUser")
+                        }
+
+                    } catch (e: Exception) {
+                        Log.e("SocketEvent", "Error processing private_message event", e)
+                    }
                 }
-            }
-        }
+
     }
 
     private fun sendMessage(messageText: String) {
@@ -107,6 +124,8 @@ class ChatActivity : AppCompatActivity() {
         adapter.notifyItemInserted(messages.size - 1)
         messageList.scrollToPosition(messages.size - 1)
 
+        Toast.makeText(this, "Message received: ${msg.content}", Toast.LENGTH_SHORT).show()
+
         GlobalScope.launch(Dispatchers.IO) {
             messageDao.insertMessage(
                 MessageEntity(
@@ -118,6 +137,7 @@ class ChatActivity : AppCompatActivity() {
             )
         }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()

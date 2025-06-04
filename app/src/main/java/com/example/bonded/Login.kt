@@ -89,11 +89,13 @@ class Login : AppCompatActivity() {
                 socket.on(Socket.EVENT_CONNECT) {
                     socket.emit("register", username)
 
-                    // Now move to Homescreen
-                    val intent = Intent(this, Homescreen::class.java)
-                    intent.putExtra("username", username) // optional if Homescreen uses it
-                    startActivity(intent)
+                    runOnUiThread {
+                        val intent = Intent(this, Homescreen::class.java)
+                        intent.putExtra("username", username)
+                        startActivity(intent)
+                    }
                 }
+
             }
         }
 
