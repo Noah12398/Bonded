@@ -63,10 +63,14 @@ class ChatActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             val savedMessages = messageDao.getMessagesBetween(currentUser, targetUser)
             withContext(Dispatchers.Main) {
-                messages.addAll(savedMessages.map { Message(it.content, it.isSentByCurrentUser) })
+                messages.addAll(savedMessages.map {
+                    // Compare sender to currentUser to set isSentByCurrentUser
+                    Message(it.content, it.sender == currentUser)
+                })
                 adapter.notifyDataSetChanged()
                 messageList.scrollToPosition(messages.size - 1)
             }
+
         }
 
 

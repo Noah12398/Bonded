@@ -4,11 +4,15 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import io.socket.client.IO
 import io.socket.client.Socket
 import java.net.URISyntaxException
+import org.json.JSONObject
+
+
 
 object SocketHandler {
     private lateinit var socket: Socket
@@ -78,23 +82,39 @@ class Login : AppCompatActivity() {
 
         login.setOnClickListener {
             val username = editUser.text.toString().trim()
-
-            if (username.isNotEmpty()) {
+            val password=editpassword.text.toString().trim()
+            if (username.isNotEmpty() && password.isNotEmpty()) {
                 // Set up socket and connect
                 SocketHandler.setSocket("http://10.0.2.2:3000")
                 val socket = SocketHandler.getSocket()
                 SocketHandler.establishConnection()
 
-                // Wait for socket connection before sending username
                 socket.on(Socket.EVENT_CONNECT) {
-                    socket.emit("register", username)
+                    val credentials = JSONObject().apply {
+                        put("username", username)
+                        put("password", password)
+                    }
+                    socket.emit("register", credentials)
 
+                }
+
+                // Move navigation into this block:
+                socket.on("login_success") {
                     runOnUiThread {
                         val intent = Intent(this, Homescreen::class.java)
                         intent.putExtra("username", username)
                         startActivity(intent)
                     }
                 }
+
+                socket.on("login_error") { args ->
+                    val errorMsg = args[0] as String
+                    runOnUiThread {
+                        Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+
 
             }
         }

@@ -4,36 +4,65 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.bonded.ui.theme.BondedTheme
+import io.socket.client.Socket
+import org.json.JSONObject
 
 class Signup : AppCompatActivity() {
-    private lateinit var editmail: EditText
-    private lateinit var edituser: EditText
-    private lateinit var editpassword: EditText
+    private lateinit var editMail: EditText
+    private lateinit var editUser: EditText
+    private lateinit var editPassword: EditText
     private lateinit var signup: Button
+    private lateinit var socket: Socket
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
-        editmail=findViewById(R.id.Email)
-        edituser=findViewById(R.id.Username)
-        editpassword=findViewById(R.id.password)
-        signup=findViewById(R.id.signup)
+        editMail = findViewById(R.id.Email)
+        editUser = findViewById(R.id.Username)
+        editPassword = findViewById(R.id.password)
+        signup = findViewById(R.id.signup)
 
-        signup.setOnClickListener{
-            val intent= Intent(this,Signup::class.java)
-            startActivity(intent)
+        // Ensure socket is set up
+        SocketHandler.setSocket("http://10.0.2.2:3000")
+        socket = SocketHandler.getSocket()
+        SocketHandler.establishConnection()
+
+        signup.setOnClickListener {
+            val username = editUser.text.toString().trim()
+            val password = editPassword.text.toString().trim()
+            val email = editMail.text.toString().trim()
+
+            if (username.isNotEmpty() && password.isNotEmpty()) {
+                val signupData = JSONObject().apply {
+                    put("username", username)
+                    put("password", password)
+                    put("email", email)
+                }
+
+
+                socket.emit("signup", signupData)
+
+                socket.once("signup_success") {
+                    runOnUiThread {
+                        Toast.makeText(this, "Signup successful! Please login.", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, Login::class.java))
+                        finish()
+                    }
+                }
+
+                socket.once("signup_error") { args ->
+                    val error = args[0] as String
+                    runOnUiThread {
+                        Toast.makeText(this, "Signup failed: $error", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+            } else {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
