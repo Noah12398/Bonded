@@ -75,6 +75,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("androidx.activity:activity-compose:1.9.2")
+    implementation ("com.google.android.material:material:1.11.0")
 
     // Jetpack Compose (with BOM)
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))

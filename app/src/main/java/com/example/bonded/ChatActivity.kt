@@ -8,13 +8,13 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.socket.client.Socket
 import org.json.JSONObject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -60,7 +60,7 @@ class ChatActivity : AppCompatActivity() {
         messageDao = db.messageDao()
 
 // Load previous messages
-        GlobalScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.IO) {
             val savedMessages = messageDao.getMessagesBetween(currentUser, targetUser)
             withContext(Dispatchers.Main) {
                 messages.addAll(savedMessages.map { Message(it.content, it.isSentByCurrentUser) })
@@ -126,7 +126,7 @@ class ChatActivity : AppCompatActivity() {
 
         Toast.makeText(this, "Message received: ${msg.content}", Toast.LENGTH_SHORT).show()
 
-        GlobalScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.IO) {
             messageDao.insertMessage(
                 MessageEntity(
                     content = text,

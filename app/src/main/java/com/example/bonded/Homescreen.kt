@@ -7,6 +7,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,7 @@ class Homescreen : AppCompatActivity() {
     private val users = mutableListOf<String>()
     private lateinit var socket: Socket
     private lateinit var username: String
+    private lateinit var logout:Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +33,7 @@ class Homescreen : AppCompatActivity() {
         username = intent.getStringExtra("username").toString()
         chatList = findViewById(R.id.chatList)
         searchBar = findViewById(R.id.searchBar)
-
+        logout=findViewById(R.id.logoutButton)
         adapter = UserAdapter(users) { name ->
             val intent = Intent(this, ChatActivity::class.java)
             intent.putExtra("userName", name)
@@ -71,5 +73,15 @@ class Homescreen : AppCompatActivity() {
             }
             runOnUiThread { adapter.notifyDataSetChanged() }
         }
+
+        logout.setOnClickListener {
+            socket.disconnect() // Disconnect from Socket.IO
+
+            // Navigate to login screen
+            val intent = Intent(this, Login::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+        }
+
     }
 }
