@@ -79,10 +79,13 @@ dependencies {
 
     // Jetpack Compose (with BOM)
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    //noinspection GradleCompatible
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation ("org.jsoup:jsoup:1.15.3")
+    implementation ("com.squareup.picasso:picasso:2.71828")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

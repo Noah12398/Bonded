@@ -3,8 +3,41 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="start"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:padding="8dp">
+    <LinearLayout
+        android:id="@+id/linkPreviewContainer"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_preview"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/linkTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:maxLines="2" />
+
+        <ImageView
+            android:id="@+id/linkImage"
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/linkUrl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#00BFFF"
+            android:autoLink="web"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/messageText"
@@ -16,5 +49,9 @@
         android:textSize="16sp"
         android:layout_margin="4dp"
         android:minWidth="48dp"
-        android:maxWidth="280dp" />
+        android:maxWidth="280dp"
+        android:autoLink="web"
+        android:linksClickable="true"
+        />
+
 </LinearLayout>
