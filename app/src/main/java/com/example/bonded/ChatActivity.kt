@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,7 +21,12 @@ import kotlinx.coroutines.withContext
 
 
 
-data class Message(val content: String, val isSentByCurrentUser: Boolean)
+data class Message(
+    val content: String,
+    val isSentByCurrentUser: Boolean,
+    val label: String? = null
+)
+
 
 class ChatActivity : AppCompatActivity() {
 
@@ -51,7 +57,13 @@ class ChatActivity : AppCompatActivity() {
         messageInput = findViewById(R.id.messageInput)
         sendButton = findViewById(R.id.sendButton)
 
-        adapter = MessageAdapter(messages)
+        adapter = MessageAdapter(messages) { position ->
+            val content = messages[position].content
+            if (isLink(content)) {
+                showLabelDialog(position)
+            }
+        }
+
         messageList.layoutManager = LinearLayoutManager(this)
         messageList.adapter = adapter
 
@@ -64,9 +76,9 @@ class ChatActivity : AppCompatActivity() {
             val savedMessages = messageDao.getMessagesBetween(currentUser, targetUser)
             withContext(Dispatchers.Main) {
                 messages.addAll(savedMessages.map {
-                    // Compare sender to currentUser to set isSentByCurrentUser
-                    Message(it.content, it.sender == currentUser)
+                    Message(it.content, it.sender == currentUser, it.label)
                 })
+
                 adapter.notifyDataSetChanged()
                 messageList.scrollToPosition(messages.size - 1)
             }
@@ -92,7 +104,7 @@ class ChatActivity : AppCompatActivity() {
 
                     try {
                         val data = args[0] as JSONObject
-                        val fromUser = data.getString("from")
+                        val fromUser = data.optString("from", "Unknown")
                         val message = data.getString("message")
 
                         Log.d("SocketEvent", "Message received from: $fromUser | message: $message")
@@ -112,6 +124,40 @@ class ChatActivity : AppCompatActivity() {
                     }
                 }
 
+    }
+    private fun isLink(text: String): Boolean {
+        val urlRegex = "(https?://\\S+)|(www\\.\\S+)".toRegex()
+        return urlRegex.containsMatchIn(text)
+    }
+    private fun showLabelDialog(position: Int) {
+        val input = EditText(this)
+        input.hint = "Enter label"
+
+        AlertDialog.Builder(this)
+            .setTitle("Label this link")
+            .setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                val label = input.text.toString().trim()
+                if (label.isNotEmpty()) {
+                    labelMessage(position, label)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    private fun labelMessage(position: Int, label: String) {
+        val msg = messages[position]
+        val content = msg.content
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val existingMsg = messageDao.getSpecificMessage(content, currentUser, targetUser)
+            if (existingMsg != null) {
+                val updatedMsg = existingMsg.copy(label = label)
+                messageDao.updateMessage(updatedMsg)
+            }
+        }
+
+        Toast.makeText(this, "Label saved for link", Toast.LENGTH_SHORT).show()
     }
 
     private fun sendMessage(messageText: String) {

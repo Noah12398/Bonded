@@ -5,6 +5,17 @@
     android:gravity="end"
     android:orientation="vertical"
     android:padding="8dp">
+
+
+    <TextView
+        android:id="@+id/linkLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#888888"
+        android:textSize="12sp"
+        android:paddingTop="4dp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/linkPreviewContainer"
         android:visibility="gone"

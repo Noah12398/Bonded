@@ -80,6 +80,13 @@ class Login : AppCompatActivity() {
         login=findViewById(R.id.button)
         signup=findViewById(R.id.signup)
 
+        try {
+            SocketHandler.getSocket()
+        } catch (e: IllegalStateException) {
+            SocketHandler.setSocket("http://10.0.2.2:3000")
+            SocketHandler.establishConnection()
+        }
+
         login.setOnClickListener {
             val username = editUser.text.toString().trim()
             val password=editpassword.text.toString().trim()

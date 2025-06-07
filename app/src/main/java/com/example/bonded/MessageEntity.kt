@@ -9,5 +9,6 @@ data class MessageEntity(
     val content: String,
     val isSentByCurrentUser: Boolean,
     val sender: String,
-    val receiver: String
+    val receiver: String,
+    val label: String? = null
 )
