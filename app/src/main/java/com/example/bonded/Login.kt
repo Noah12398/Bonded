@@ -83,7 +83,7 @@ class Login : AppCompatActivity() {
         try {
             SocketHandler.getSocket()
         } catch (e: IllegalStateException) {
-            SocketHandler.setSocket("http://10.0.2.2:3000")
+            SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
             SocketHandler.establishConnection()
         }
 
@@ -92,7 +92,7 @@ class Login : AppCompatActivity() {
             val password=editpassword.text.toString().trim()
             if (username.isNotEmpty() && password.isNotEmpty()) {
                 // Set up socket and connect
-                SocketHandler.setSocket("http://10.0.2.2:3000")
+                SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
                 val socket = SocketHandler.getSocket()
                 SocketHandler.establishConnection()
 

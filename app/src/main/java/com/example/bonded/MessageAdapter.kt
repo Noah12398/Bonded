@@ -12,9 +12,10 @@ import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import com.squareup.picasso.Picasso
 
-class MessageAdapter(private val messages: List<Message>,    private val onLongClick: (position: Int) -> Unit
-) :
-    RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
+class MessageAdapter(
+    private var messages: MutableList<Message>,
+    private val onLongClick: (position: Int) -> Unit
+) : RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val messageText: TextView = itemView.findViewById(R.id.messageText)
@@ -31,7 +32,11 @@ class MessageAdapter(private val messages: List<Message>,    private val onLongC
             ?: throw IllegalStateException("linkLabel not found in itemView")
     }
 
-
+    fun updateMessages(newMessages: List<Message>) {
+        messages.clear()
+        messages.addAll(newMessages)
+        notifyDataSetChanged()
+    }
     override fun getItemViewType(position: Int): Int {
         return if (messages[position].isSentByCurrentUser) 1 else 2
     }

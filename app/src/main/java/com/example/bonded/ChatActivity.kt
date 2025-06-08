@@ -18,7 +18,13 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.LinearLayout
+import androidx.appcompat.widget.Toolbar
 
 
 data class Message(
@@ -42,14 +48,22 @@ class ChatActivity : AppCompatActivity() {
 
     private val messages = mutableListOf<Message>()
     private lateinit var adapter: MessageAdapter
+    private val allMessages = mutableListOf<Message>() // stores all messages
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.chat)
 
+
+        val toolbar = findViewById<Toolbar>(R.id.chatToolbar)
+        setSupportActionBar(toolbar)
+
         // Get usernames from Intent
         currentUser = intent.getStringExtra("selfUser") ?: return
         targetUser = intent.getStringExtra("userName") ?: return
+
+
+        supportActionBar?.title = targetUser
 
         socket = SocketHandler.getSocket()
 
@@ -78,12 +92,32 @@ class ChatActivity : AppCompatActivity() {
                 messages.addAll(savedMessages.map {
                     Message(it.content, it.sender == currentUser, it.label)
                 })
-
+                allMessages.addAll(messages)
                 adapter.notifyDataSetChanged()
                 messageList.scrollToPosition(messages.size - 1)
             }
 
         }
+        val searchEditText = findViewById<EditText>(R.id.searchEditText)
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val query = s.toString().trim()
+                val filtered = if (query.isEmpty()) {
+                    allMessages
+                } else {
+                    allMessages.filter {
+                        it.label?.contains(query, ignoreCase = true) == true
+                    }
+                }
+
+                messages.clear()
+                messages.addAll(filtered)
+                adapter.notifyDataSetChanged()
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
 
 
 
@@ -95,6 +129,7 @@ class ChatActivity : AppCompatActivity() {
                 addMessage(text, true)
             }
         }
+
 
         // Receive message from server
 
@@ -125,6 +160,24 @@ class ChatActivity : AppCompatActivity() {
                 }
 
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.chat_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_search -> {
+                val searchBar = findViewById<LinearLayout>(R.id.searchBarContainer)
+                searchBar.visibility =
+                    if (searchBar.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun isLink(text: String): Boolean {
         val urlRegex = "(https?://\\S+)|(www\\.\\S+)".toRegex()
         return urlRegex.containsMatchIn(text)
@@ -155,10 +208,19 @@ class ChatActivity : AppCompatActivity() {
                 val updatedMsg = existingMsg.copy(label = label)
                 messageDao.updateMessage(updatedMsg)
             }
-        }
 
-        Toast.makeText(this, "Label saved for link", Toast.LENGTH_SHORT).show()
+            withContext(Dispatchers.Main) {
+                // update label in UI too
+                messages[position] = msg.copy(label = label)
+                allMessages[allMessages.indexOfFirst { it.content == msg.content && it.isSentByCurrentUser == msg.isSentByCurrentUser }] =
+                    msg.copy(label = label)
+
+                adapter.notifyItemChanged(position)
+                Toast.makeText(this@ChatActivity, "Label saved for link", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
 
     private fun sendMessage(messageText: String) {
         val messageData = JSONObject().apply {
@@ -171,10 +233,10 @@ class ChatActivity : AppCompatActivity() {
     private fun addMessage(text: String, isSentByCurrentUser: Boolean) {
         val msg = Message(text, isSentByCurrentUser)
         messages.add(msg)
+        allMessages.add(msg) // keep in sync
+
         adapter.notifyItemInserted(messages.size - 1)
         messageList.scrollToPosition(messages.size - 1)
-
-        Toast.makeText(this, "Message received: ${msg.content}", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch(Dispatchers.IO) {
             messageDao.insertMessage(
@@ -187,6 +249,7 @@ class ChatActivity : AppCompatActivity() {
             )
         }
     }
+
 
 
     override fun onDestroy() {
