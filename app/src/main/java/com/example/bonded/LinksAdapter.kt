@@ -8,8 +8,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class LinksAdapter(private val links: List<Pair<String, String?>>) :
+class LinksAdapter(private val originalLinks: List<Pair<String, String?>>) :
     RecyclerView.Adapter<LinksAdapter.ViewHolder>() {
+
+    private var filteredLinks: List<Pair<String, String?>> = originalLinks.toList()
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val linkText: TextView = itemView.findViewById(R.id.linkText)
@@ -23,7 +25,7 @@ class LinksAdapter(private val links: List<Pair<String, String?>>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val (link, label) = links[position]
+        val (link, label) = filteredLinks[position]
         holder.linkText.text = link
         holder.labelText.text = label ?: "No label"
 
@@ -33,5 +35,18 @@ class LinksAdapter(private val links: List<Pair<String, String?>>) :
         }
     }
 
-    override fun getItemCount() = links.size
+    override fun getItemCount() = filteredLinks.size
+
+    // Add this function to filter links by label
+    fun filter(query: String) {
+        filteredLinks = if (query.isBlank()) {
+            originalLinks
+        } else {
+            originalLinks.filter {
+                it.second?.contains(query, ignoreCase = true) == true
+            }
+        }
+        notifyDataSetChanged()
+    }
 }
+
