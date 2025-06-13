@@ -1,6 +1,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="12dp"
+    android:padding="16dp"
+    android:layout_margin="8dp"
+    android:background="@drawable/item_background"
+    android:elevation="2dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -10,12 +13,16 @@
         android:layout_height="wrap_content"
         android:textColor="@android:color/holo_blue_dark"
         android:autoLink="web"
-        android:textSize="16sp" />
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:paddingBottom="4dp" />
 
     <TextView
         android:id="@+id/labelText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/darker_gray"
-        android:textSize="14sp" />
+        android:textColor="#555555"
+        android:textSize="14sp"
+        android:maxLines="2"
+        android:ellipsize="end" />
 </LinearLayout>

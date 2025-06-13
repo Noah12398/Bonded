@@ -37,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_sent_message"
-                android:hint="Search label..."
+                android:hint="Search"
                 android:padding="8dp" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>

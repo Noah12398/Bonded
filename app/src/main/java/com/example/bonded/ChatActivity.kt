@@ -112,8 +112,9 @@ class ChatActivity : AppCompatActivity() {
                 val filtered = if (query.isEmpty()) {
                     allMessages
                 } else {
-                    allMessages.filter {
-                        it.label?.contains(query, ignoreCase = true) == true
+                    allMessages.filter { message ->
+                        message.content.contains(query, ignoreCase = true) ||
+                                message.label?.contains(query, ignoreCase = true) == true
                     }
                 }
 
@@ -125,6 +126,7 @@ class ChatActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
+
 
 
 
