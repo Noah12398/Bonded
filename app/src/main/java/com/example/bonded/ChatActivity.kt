@@ -193,18 +193,21 @@ class ChatActivity : AppCompatActivity() {
     }
     private fun showLabelDialog(position: Int) {
         val input = EditText(this)
+        val currentLabel = messages[position].label
         input.hint = "Enter label"
+        input.setText(currentLabel ?: "")
 
         AlertDialog.Builder(this)
             .setTitle("Label this link")
             .setView(input)
             .setPositiveButton("Save") { _, _ ->
                 val label = input.text.toString().trim()
-                if (label.isNotEmpty()) {
-                    labelMessage(position, label)
-                }
+                labelMessage(position, label)
             }
             .setNegativeButton("Cancel", null)
+            .setNeutralButton("Delete Label") { _, _ ->
+                labelMessage(position, "") // empty string means delete
+            }
             .show()
     }
     private fun labelMessage(position: Int, label: String) {
@@ -214,21 +217,31 @@ class ChatActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             val existingMsg = messageDao.getSpecificMessage(content, currentUser, targetUser)
             if (existingMsg != null) {
-                val updatedMsg = existingMsg.copy(label = label)
+                val updatedMsg = existingMsg.copy(label = if (label.isEmpty()) null else label)
                 messageDao.updateMessage(updatedMsg)
             }
 
             withContext(Dispatchers.Main) {
-                // update label in UI too
-                messages[position] = msg.copy(label = label)
-                allMessages[allMessages.indexOfFirst { it.content == msg.content && it.isSentByCurrentUser == msg.isSentByCurrentUser }] =
-                    msg.copy(label = label)
+                val newLabel = if (label.isEmpty()) null else label
+
+                messages[position] = msg.copy(label = newLabel)
+                allMessages[allMessages.indexOfFirst {
+                    it.content == msg.content && it.isSentByCurrentUser == msg.isSentByCurrentUser
+                }] = msg.copy(label = newLabel)
 
                 adapter.notifyItemChanged(position)
-                Toast.makeText(this@ChatActivity, "Label saved for link", Toast.LENGTH_SHORT).show()
+
+                val toastMsg = when {
+                    label.isEmpty() -> "Label deleted"
+                    msg.label == null -> "Label added"
+                    else -> "Label updated"
+                }
+
+                Toast.makeText(this@ChatActivity, toastMsg, Toast.LENGTH_SHORT).show()
             }
         }
     }
+
 
 
     private fun sendMessage(messageText: String) {
