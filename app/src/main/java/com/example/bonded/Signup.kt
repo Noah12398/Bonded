@@ -26,7 +26,7 @@ class Signup : AppCompatActivity() {
         signup = findViewById(R.id.signup)
 
         // Ensure socket is set up
-        SocketHandler.setSocket("http://10.0.2.2:3000")
+        SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
         socket = SocketHandler.getSocket()
         SocketHandler.establishConnection()
 
@@ -42,6 +42,7 @@ class Signup : AppCompatActivity() {
                     put("email", email)
                 }
 
+                Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show()  // Debug line
 
                 socket.emit("signup", signupData)
 

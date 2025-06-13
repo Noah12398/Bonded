@@ -17,7 +17,9 @@ import org.json.JSONObject
 object SocketHandler {
     private lateinit var socket: Socket
     private val TAG = "SocketHandler"
-
+    fun isInitialized(): Boolean {
+        return ::socket.isInitialized
+    }
     @Synchronized
     fun setSocket(serverUrl: String) {
         try {
@@ -80,12 +82,12 @@ class Login : AppCompatActivity() {
         login=findViewById(R.id.button)
         signup=findViewById(R.id.signup)
 
-        try {
-            SocketHandler.getSocket()
-        } catch (e: IllegalStateException) {
+        if (!SocketHandler.isInitialized()) {
             SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
             SocketHandler.establishConnection()
         }
+
+
 
         login.setOnClickListener {
             val username = editUser.text.toString().trim()

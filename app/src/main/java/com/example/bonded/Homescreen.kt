@@ -44,6 +44,10 @@ class Homescreen : AppCompatActivity() {
         chatList.layoutManager = LinearLayoutManager(this)
         chatList.adapter = adapter
 
+        if (!SocketHandler.isInitialized()) {
+            SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
+            SocketHandler.establishConnection()
+        }
         socket = SocketHandler.getSocket()
         socket.emit("get_chat_users", username)
 

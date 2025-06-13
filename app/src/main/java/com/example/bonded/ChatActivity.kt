@@ -1,4 +1,5 @@
 package com.example.bonded
+import android.content.Intent
 import android.util.Log
 
 import com.example.bonded.Message
@@ -54,16 +55,22 @@ class ChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.chat)
 
-
-        val toolbar = findViewById<Toolbar>(R.id.chatToolbar)
-        setSupportActionBar(toolbar)
-
         // Get usernames from Intent
         currentUser = intent.getStringExtra("selfUser") ?: return
         targetUser = intent.getStringExtra("userName") ?: return
 
+        val chatToolbar = findViewById<Toolbar>(R.id.chatToolbar)
+        chatToolbar.title = targetUser // Replace with actual user name
+        setSupportActionBar(chatToolbar)
 
-        supportActionBar?.title = targetUser
+// Set click listener on the toolbar title
+        chatToolbar.setOnClickListener {
+            val intent = Intent(this, LinksActivity::class.java)
+            intent.putExtra("currentUser", currentUser)
+            intent.putExtra("targetUser", targetUser)
+            startActivity(intent)
+
+        }
 
         socket = SocketHandler.getSocket()
 

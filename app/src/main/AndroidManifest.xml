@@ -17,6 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bonded"
         tools:targetApi="31">
+        <activity android:name=".LinksActivity" />
 
         <activity
             android:name=".ChatActivity"
