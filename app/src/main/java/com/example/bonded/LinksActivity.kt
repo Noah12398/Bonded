@@ -1,59 +1,39 @@
 package com.example.bonded
 
 import android.os.Bundle
-import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 
 class LinksActivity : AppCompatActivity() {
-
-    private lateinit var db: AppDatabase
-    private lateinit var messageDao: MessageDao
-    private lateinit var adapter: LinksAdapter
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_links)
 
-        val searchView = findViewById<androidx.appcompat.widget.SearchView>(R.id.searchView)
-        val recyclerView = findViewById<RecyclerView>(R.id.linksRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 
-        db = AppDatabase.getDatabase(this)
-        messageDao = db.messageDao()
+        viewPager.adapter = LinksPagerAdapter(this)
 
-        val currentUser = intent.getStringExtra("currentUser") ?: return
-        val targetUser = intent.getStringExtra("targetUser") ?: return
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = if (position == 0) "By Domain" else "By Label"
+        }.attach()
+    }
+}
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            val allMessages = messageDao.getMessagesBetween(currentUser, targetUser)
 
-            val links = allMessages.filter {
-                it.content.matches(Regex("(https?://\\S+)|(www\\.\\S+)"))
-            }.map { it.content to it.label }
 
-            withContext(Dispatchers.Main) {
-                adapter = LinksAdapter(links.toMutableList()) // Initialize with actual data
-                recyclerView.adapter = adapter
+class LinksPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+    override fun getItemCount() = 2
 
-                searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
-                    androidx.appcompat.widget.SearchView.OnQueryTextListener {
-                    override fun onQueryTextSubmit(query: String?): Boolean {
-                        adapter.filter(query ?: "")
-                        return false
-                    }
-
-                    override fun onQueryTextChange(newText: String?): Boolean {
-                        adapter.filter(newText ?: "")
-                        return false
-                    }
-                })
-            }
+    override fun createFragment(position: Int): Fragment {
+        return if (position == 0) {
+            ByDomainFragment()
+        } else {
+            ByLabelFragment()
         }
     }
 }
