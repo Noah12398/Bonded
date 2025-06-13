@@ -73,10 +73,10 @@ class ByDomainFragment : Fragment() {
    }
 
 
-
-
-
-
+              private fun extractUrl(text: String): String? {
+                  val urlRegex = Regex("(https?://\\S+)|(www\\.\\S+)")
+                  return urlRegex.find(text)?.value
+              }
     private fun fetchLinks(callback: (List<Pair<String, String?>>) -> Unit) {
         val db = AppDatabase.getDatabase(requireContext())
         val dao = db.messageDao()
@@ -85,9 +85,8 @@ class ByDomainFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             val messages = dao.getMessagesBetween(currentUser, targetUser)
-                .filter { it.content.matches(Regex("https?://\\S+|www\\.\\S+")) }
-                .map { it.content to it.label }
-
+.filter { extractUrl(it.content) != null }
+.map { extractUrl(it.content)!! to it.label }
             withContext(Dispatchers.Main) {
                 callback(messages)
             }

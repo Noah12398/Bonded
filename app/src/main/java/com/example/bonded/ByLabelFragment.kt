@@ -52,7 +52,10 @@ class ByLabelFragment : Fragment() {
     private fun groupByLabel(links: List<Pair<String, String?>>): Map<String, List<Pair<String, String?>>> {
         return links.groupBy { it.second ?: "No Label" }
     }
-
+    private fun extractUrl(text: String): String? {
+        val urlRegex = Regex("(https?://\\S+)|(www\\.\\S+)")
+        return urlRegex.find(text)?.value
+    }
     private fun fetchLinks(callback: (List<Pair<String, String?>>) -> Unit) {
         val db = AppDatabase.getDatabase(requireContext())
         val dao = db.messageDao()
@@ -61,8 +64,8 @@ class ByLabelFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             val messages = dao.getMessagesBetween(currentUser, targetUser)
-                .filter { it.content.matches(Regex("https?://\\S+|www\\.\\S+")) }
-                .map { it.content to it.label }
+                .filter { extractUrl(it.content) != null }
+                .map { extractUrl(it.content)!! to it.label }
 
             withContext(Dispatchers.Main) {
                 callback(messages)
