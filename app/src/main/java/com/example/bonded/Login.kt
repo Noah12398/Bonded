@@ -6,9 +6,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.lifecycleScope
+//import com.google.firebase.auth.FirebaseAuth
 import io.socket.client.IO
 import io.socket.client.Socket
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.net.URISyntaxException
 import org.json.JSONObject
 
@@ -72,7 +75,7 @@ class Login : AppCompatActivity() {
     private lateinit var editpassword:EditText
     private lateinit var login:Button
     private lateinit var signup:Button
-    private lateinit var mAuth:FirebaseAuth
+    //private lateinit var mAuth:FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -82,51 +85,72 @@ class Login : AppCompatActivity() {
         login=findViewById(R.id.button)
         signup=findViewById(R.id.signup)
 
-        if (!SocketHandler.isInitialized()) {
-            SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
-            SocketHandler.establishConnection()
+
+
+        val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
+        val savedUsername = sharedPref.getString("username", "")
+
+        if (isLoggedIn && !savedUsername.isNullOrEmpty()) {
+            val intent = Intent(this, Homescreen::class.java)
+            intent.putExtra("username", savedUsername)
+            startActivity(intent)
+            finish()
+            return
         }
-
-
-
         login.setOnClickListener {
             val username = editUser.text.toString().trim()
-            val password=editpassword.text.toString().trim()
+            val password = editpassword.text.toString().trim()
+
             if (username.isNotEmpty() && password.isNotEmpty()) {
-                // Set up socket and connect
-                SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
-                val socket = SocketHandler.getSocket()
-                SocketHandler.establishConnection()
 
-                socket.on(Socket.EVENT_CONNECT) {
-                    val credentials = JSONObject().apply {
-                        put("username", username)
-                        put("password", password)
+                lifecycleScope.launch(Dispatchers.IO) {
+                    if (!SocketHandler.isInitialized()) {
+                        SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
                     }
-                    socket.emit("register", credentials)
+                    val socket = SocketHandler.getSocket()
 
-                }
-
-                // Move navigation into this block:
-                socket.on("login_success") {
-                    runOnUiThread {
-                        val intent = Intent(this, Homescreen::class.java)
-                        intent.putExtra("username", username)
-                        startActivity(intent)
+                    socket.on(Socket.EVENT_CONNECT) {
+                        val credentials = JSONObject().apply {
+                            put("username", username)
+                            put("password", password)
+                        }
+                        socket.emit("register", credentials)
                     }
-                }
 
-                socket.on("login_error") { args ->
-                    val errorMsg = args[0] as String
-                    runOnUiThread {
-                        Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
+                    socket.on("login_success") {
+                        runOnUiThread {
+                            val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+                            with(sharedPref.edit()) {
+                                putBoolean("isLoggedIn", true)
+                                putString("username", username)
+                                apply()
+                            }
+
+                            // Connect after login and store identity
+                            SocketHandler.establishConnection()
+
+                            val intent = Intent(this@Login, Homescreen::class.java)
+                            intent.putExtra("username", username)
+                            startActivity(intent)
+                            finish()
+                        }
                     }
+
+                    socket.on("login_error") { args ->
+                        val errorMsg = args[0] as String
+                        runOnUiThread {
+                            Toast.makeText(this@Login, errorMsg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    // Establish connection AFTER listeners are set
+                    SocketHandler.establishConnection()
                 }
-
-
-
             }
         }
+
+
 
         signup.setOnClickListener{
             val intent= Intent(this,Signup::class.java)

@@ -1,6 +1,8 @@
 package com.example.bonded
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MessageDao {
@@ -15,4 +17,20 @@ interface MessageDao {
 
     @Update
     suspend fun updateMessage(message: MessageEntity)
+
+    @Query("SELECT * FROM messages WHERE (sender = :user1 AND receiver = :user2) OR (sender = :user2 AND receiver = :user1) ORDER BY timestamp ASC")
+    fun getMessagesBetweenLive(user1: String, user2: String): LiveData<List<MessageEntity>>
+
+    @Query("SELECT * FROM messages WHERE id = :id LIMIT 1")
+    suspend fun getMessageById(id: Int): MessageEntity?
+
+    @Query("""
+    SELECT * FROM messages 
+    WHERE (sender = :user1 AND receiver = :user2) 
+       OR (sender = :user2 AND receiver = :user1) 
+    ORDER BY timestamp ASC
+""")
+    fun getMessagesBetweenFlow(user1: String, user2: String): Flow<List<MessageEntity>>
+
+
 }

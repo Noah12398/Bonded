@@ -10,5 +10,6 @@ data class MessageEntity(
     val isSentByCurrentUser: Boolean,
     val sender: String,
     val receiver: String,
-    val label: String? = null
+    val label: String? = null,
+    val timestamp: Long = System.currentTimeMillis() // <- add this line
 )

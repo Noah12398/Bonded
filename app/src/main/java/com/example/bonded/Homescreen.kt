@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.common.util.CollectionUtils.listOf
+//import com.google.android.gms.common.util.CollectionUtils.listOf
 import io.socket.client.Socket
 import org.json.JSONArray
 
@@ -79,6 +79,11 @@ class Homescreen : AppCompatActivity() {
         }
 
         logout.setOnClickListener {
+            val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                clear()
+                apply()
+            }
             socket.disconnect() // Disconnect from Socket.IO
 
             // Navigate to login screen

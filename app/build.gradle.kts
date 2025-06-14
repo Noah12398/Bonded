@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.gms.google-services")
+    //id("com.google.gms.google-services")
     id("kotlin-kapt")
 }
 
@@ -63,10 +63,10 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-database-ktx")
+    //implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
+    //implementation("com.google.firebase:firebase-analytics")
+    //implementation("com.google.firebase:firebase-auth")
+    //implementation("com.google.firebase:firebase-database-ktx")
 
     // AndroidX Core & UI
     implementation("androidx.core:core-ktx:1.12.0")
