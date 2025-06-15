@@ -56,6 +56,7 @@ dependencies {
     implementation("io.socket:socket.io-client:2.0.1") {
         exclude(group = "org.json", module = "json")
     }
+    implementation ("androidx.security:security-crypto:1.1.0-alpha03")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")

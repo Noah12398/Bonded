@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 //import com.google.android.gms.common.util.CollectionUtils.listOf
@@ -121,12 +123,18 @@ class Homescreen : AppCompatActivity() {
         }
 
         logout.setOnClickListener {
-            val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+            val sharedPref = EncryptedSharedPreferences.create(
+                "secure_user_session",
+                MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+                this,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
             with(sharedPref.edit()) {
                 clear()
                 apply()
             }
-            socket.disconnect() // Disconnect from Socket.IO
 
             // Navigate to login screen
             val intent = Intent(this, Login::class.java)
