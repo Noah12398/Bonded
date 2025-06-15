@@ -32,5 +32,15 @@ interface MessageDao {
 """)
     fun getMessagesBetweenFlow(user1: String, user2: String): Flow<List<MessageEntity>>
 
+    @Query("""
+    SELECT DISTINCT 
+        CASE 
+            WHEN sender = :username THEN receiver 
+            ELSE sender 
+        END AS otherUser
+    FROM messages
+    WHERE sender = :username OR receiver = :username
+""")
+    suspend fun getUsersChattedWith(username: String): List<String>
 
 }

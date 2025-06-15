@@ -96,6 +96,8 @@ class ChatActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             messageDao.getMessagesBetweenFlow(currentUser, targetUser).collect { dbMessages ->
+                Log.d("FLOW", "Collected: ${dbMessages.map { it.content }}")
+
                 val formattedMessages = dbMessages.map {
                     Message(
                         id = it.id,
@@ -253,14 +255,14 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun addMessage(text: String, isSentByCurrentUser: Boolean) {
-        val newMessage = Message(content = text, isSentByCurrentUser = true)
-
-        messageList.post {
-            messages.add(newMessage)
-            allMessages.add(newMessage)
-            adapter.notifyItemInserted(messages.size - 1)
-            messageList.scrollToPosition(messages.size - 1)
-        }
+//        val newMessage = Message(content = text, isSentByCurrentUser = true)
+//
+//        messageList.post {
+//            messages.add(newMessage)
+//            allMessages.add(newMessage)
+//            adapter.notifyItemInserted(messages.size - 1)
+//            messageList.scrollToPosition(messages.size - 1)
+//        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             messageDao.insertMessage(

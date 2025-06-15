@@ -26,9 +26,14 @@ class Signup : AppCompatActivity() {
         signup = findViewById(R.id.signup)
 
         // Ensure socket is set up
-        SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
+        if (!SocketHandler.isInitialized()) {
+            throw IllegalStateException("Socket should be initialized in MyApp")
+        }
         socket = SocketHandler.getSocket()
-        SocketHandler.establishConnection()
+        if (!socket.connected()) {
+            SocketHandler.establishConnection()
+        }
+
 
         signup.setOnClickListener {
             val username = editUser.text.toString().trim()

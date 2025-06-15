@@ -11,10 +11,14 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 //import com.google.android.gms.common.util.CollectionUtils.listOf
 import io.socket.client.Socket
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 class Homescreen : AppCompatActivity() {
@@ -25,7 +29,7 @@ class Homescreen : AppCompatActivity() {
     private lateinit var socket: Socket
     private lateinit var username: String
     private lateinit var logout:Button
-
+    private lateinit var messageDao: MessageDao
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -49,20 +53,31 @@ class Homescreen : AppCompatActivity() {
             SocketHandler.establishConnection()
         }
         socket = SocketHandler.getSocket()
-        socket.emit("get_chat_users", username)
 
-        socket.on("chat_users_list") { args ->
-            val userList = args[0] as JSONArray
-            users.clear()
-            for (i in 0 until userList.length()) {
-                users.add(userList.getString(i))
+        // Assuming you already have a reference to your database
+        messageDao = AppDatabase.getDatabase(this).messageDao()
+
+        lifecycleScope.launch {
+            val chattedUsers = withContext(Dispatchers.IO) {
+                messageDao.getUsersChattedWith(username)
             }
-            runOnUiThread { adapter.notifyDataSetChanged() }
+
+            users.clear()
+            users.addAll(chattedUsers)
+            adapter.notifyDataSetChanged()
         }
+
 
         searchBar.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                socket.emit("search_users", s.toString())
+                val query = s.toString()
+                if (query.isNotEmpty()) {
+                    socket.emit("search_users", query)
+                } else {
+                    // Hide all search results if search bar is empty
+                    users.clear()
+                    adapter.notifyDataSetChanged()
+                }
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -93,4 +108,17 @@ class Homescreen : AppCompatActivity() {
         }
 
     }
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            val chattedUsers = withContext(Dispatchers.IO) {
+                messageDao.getUsersChattedWith(username)
+            }
+
+            users.clear()
+            users.addAll(chattedUsers)
+            adapter.notifyDataSetChanged()
+        }
+    }
+
 }

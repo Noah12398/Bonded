@@ -11,29 +11,32 @@ import androidx.lifecycle.lifecycleScope
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.net.URISyntaxException
 import org.json.JSONObject
-
-
-
 object SocketHandler {
     private lateinit var socket: Socket
     private val TAG = "SocketHandler"
+
     fun isInitialized(): Boolean {
         return ::socket.isInitialized
     }
+
     @Synchronized
     fun setSocket(serverUrl: String) {
+        Log.d(TAG, "SocketHandler::setSocket called")
+        if (::socket.isInitialized) {
+            Log.d(TAG, "Socket already initialized")
+            return
+        }
+
         try {
             val options = IO.Options().apply {
-                // Connection timeout
                 timeout = 10000
-                // Reconnection settings
                 reconnection = true
                 reconnectionAttempts = 5
                 reconnectionDelay = 1000
-                // Transport options
                 transports = arrayOf("websocket", "polling")
             }
 
@@ -47,6 +50,7 @@ object SocketHandler {
 
     @Synchronized
     fun getSocket(): Socket {
+        Log.d(TAG, "SocketHandler::getSocket called")
         if (!::socket.isInitialized) {
             throw IllegalStateException("Socket not initialized. Call setSocket() first.")
         }
@@ -58,6 +62,8 @@ object SocketHandler {
         if (::socket.isInitialized && !socket.connected()) {
             Log.d(TAG, "Establishing socket connection...")
             socket.connect()
+        } else if (::socket.isInitialized && socket.connected()) {
+            Log.d(TAG, "Socket already connected")
         }
     }
 
@@ -71,90 +77,213 @@ object SocketHandler {
     }
 }
 class Login : AppCompatActivity() {
-    private lateinit var editUser:EditText
-    private lateinit var editpassword:EditText
-    private lateinit var login:Button
-    private lateinit var signup:Button
-    //private lateinit var mAuth:FirebaseAuth
+    private lateinit var editUser: EditText
+    private lateinit var editpassword: EditText
+    private lateinit var login: Button
+    private lateinit var signup: Button
+    private val TAG = "LoginActivity"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        //FirebaseDatabase.getInstance().reference.child("Test").setValue("Hello world")
-        editUser=findViewById(R.id.Username)
-        editpassword=findViewById(R.id.password)
-        login=findViewById(R.id.button)
-        signup=findViewById(R.id.signup)
 
+        Log.d(TAG, "onCreate called")
 
-
-        val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
-        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-        val savedUsername = sharedPref.getString("username", "")
-
-        if (isLoggedIn && !savedUsername.isNullOrEmpty()) {
-            val intent = Intent(this, Homescreen::class.java)
-            intent.putExtra("username", savedUsername)
-            startActivity(intent)
-            finish()
+        // Initialize views
+        try {
+            editUser = findViewById(R.id.Username)
+            editpassword = findViewById(R.id.password)
+            login = findViewById(R.id.button)
+            signup = findViewById(R.id.signup)
+            Log.d(TAG, "Views initialized successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing views", e)
+            Toast.makeText(this, "Error loading login screen", Toast.LENGTH_LONG).show()
             return
         }
+
+        // Check if already logged in (do this synchronously but quickly)
+        checkExistingSession()
+
+        // Set up login button
         login.setOnClickListener {
             val username = editUser.text.toString().trim()
             val password = editpassword.text.toString().trim()
 
-            if (username.isNotEmpty() && password.isNotEmpty()) {
+            if (username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please enter both username and password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-                lifecycleScope.launch(Dispatchers.IO) {
-                    if (!SocketHandler.isInitialized()) {
-                        SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
-                    }
-                    val socket = SocketHandler.getSocket()
+            // Disable button to prevent multiple clicks
+            login.isEnabled = false
+            login.text = "Logging in..."
 
-                    socket.on(Socket.EVENT_CONNECT) {
-                        val credentials = JSONObject().apply {
-                            put("username", username)
-                            put("password", password)
-                        }
-                        socket.emit("register", credentials)
-                    }
+            // Perform login on background thread
+            performLogin(username, password)
+        }
 
-                    socket.on("login_success") {
-                        runOnUiThread {
-                            val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
-                            with(sharedPref.edit()) {
-                                putBoolean("isLoggedIn", true)
-                                putString("username", username)
-                                apply()
-                            }
+        signup.setOnClickListener {
+            val intent = Intent(this, Signup::class.java)
+            startActivity(intent)
+        }
+    }
 
-                            // Connect after login and store identity
-                            SocketHandler.establishConnection()
+    private fun checkExistingSession() {
+        try {
+            val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+            val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
+            val savedUsername = sharedPref.getString("username", "")
 
-                            val intent = Intent(this@Login, Homescreen::class.java)
-                            intent.putExtra("username", username)
-                            startActivity(intent)
-                            finish()
-                        }
-                    }
+            if (isLoggedIn && !savedUsername.isNullOrEmpty()) {
+                Log.d(TAG, "User already logged in, redirecting to home")
+                val intent = Intent(this, Homescreen::class.java)
+                intent.putExtra("username", savedUsername)
+                startActivity(intent)
+                finish()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking existing session", e)
+        }
+    }
 
-                    socket.on("login_error") { args ->
-                        val errorMsg = args[0] as String
-                        runOnUiThread {
-                            Toast.makeText(this@Login, errorMsg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
+    private fun performLogin(username: String, password: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Starting login process for user: $username")
 
-                    // Establish connection AFTER listeners are set
+                // Since socket is already initialized in Application class, just get it
+                if (!SocketHandler.isInitialized()) {
+                    Log.d(TAG, "Socket not initialized, initializing now")
+                    SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
+                }
+
+                val socket = SocketHandler.getSocket()
+
+                // Remove any existing listeners to avoid duplicates
+                socket.off("login_success")
+                socket.off("login_error")
+                socket.off(Socket.EVENT_CONNECT_ERROR)
+                socket.off(Socket.EVENT_DISCONNECT)
+
+                // Set up listeners
+                setupSocketListeners(socket, username)
+
+                // If not connected, establish connection
+                if (!socket.connected()) {
+                    Log.d(TAG, "Socket not connected, connecting...")
                     SocketHandler.establishConnection()
+
+                    // Wait for connection with timeout (non-blocking way)
+                    var waitTime = 0
+                    while (!socket.connected() && waitTime < 5000) { // 5 second timeout
+                        delay(100) // Use coroutine delay instead of Thread.sleep
+                        waitTime += 100
+                    }
+
+                    if (!socket.connected()) {
+                        throw Exception("Failed to connect to server after 5 seconds")
+                    }
+                }
+
+                Log.d(TAG, "Socket connected, sending login credentials")
+
+                // Send login request
+                val credentials = JSONObject().apply {
+                    put("username", username)
+                    put("password", password)
+                }
+                socket.emit("register", credentials)
+                Log.d(TAG, "Login credentials sent")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Login error", e)
+                runOnUiThread {
+                    resetLoginButton()
+                    Toast.makeText(this@Login, "Connection failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun setupSocketListeners(socket: Socket, username: String) {
+        socket.on("login_success") {
+            Log.d(TAG, "Login successful")
+            runOnUiThread {
+                try {
+                    val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+                    with(sharedPref.edit()) {
+                        putBoolean("isLoggedIn", true)
+                        putString("username", username)
+                        apply()
+                    }
+
+                    val intent = Intent(this@Login, Homescreen::class.java)
+                    intent.putExtra("username", username)
+                    startActivity(intent)
+                    finish()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error handling login success", e)
+                    resetLoginButton()
                 }
             }
         }
 
-
-
-        signup.setOnClickListener{
-            val intent= Intent(this,Signup::class.java)
-            startActivity(intent)
+        socket.on("login_error") { args ->
+            Log.d(TAG, "Login error received")
+            runOnUiThread {
+                resetLoginButton()
+                val errorMsg = if (args.isNotEmpty()) args[0].toString() else "Login failed"
+                Toast.makeText(this@Login, errorMsg, Toast.LENGTH_SHORT).show()
+            }
         }
+
+        socket.on(Socket.EVENT_CONNECT_ERROR) { args ->
+            Log.e(TAG, "Socket connection error: ${args.contentToString()}")
+            runOnUiThread {
+                resetLoginButton()
+                Toast.makeText(this@Login, "Failed to connect to server", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        socket.on(Socket.EVENT_DISCONNECT) {
+            Log.d(TAG, "Socket disconnected")
+            runOnUiThread {
+                resetLoginButton()
+                Toast.makeText(this@Login, "Connection lost", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun resetLoginButton() {
+        login.isEnabled = true
+        login.text = "Login"
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy called")
+        // Clean up socket listeners
+        try {
+            if (SocketHandler.isInitialized()) {
+                val socket = SocketHandler.getSocket()
+                socket.off("login_success")
+                socket.off("login_error")
+                socket.off(Socket.EVENT_CONNECT_ERROR)
+                socket.off(Socket.EVENT_DISCONNECT)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error cleaning up socket listeners", e)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause called")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "onResume called")
     }
 }
