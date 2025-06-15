@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 //import com.google.android.gms.common.util.CollectionUtils.listOf
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,7 @@ class Homescreen : AppCompatActivity() {
     private lateinit var username: String
     private lateinit var logout:Button
     private lateinit var messageDao: MessageDao
+    private lateinit var searchInputLayout: TextInputLayout
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -37,6 +40,8 @@ class Homescreen : AppCompatActivity() {
         username = intent.getStringExtra("username").toString()
         chatList = findViewById(R.id.chatList)
         searchBar = findViewById(R.id.searchBar)
+        searchInputLayout = findViewById(R.id.searchInputLayout) // Add this ID in XML
+
         logout=findViewById(R.id.logoutButton)
         adapter = UserAdapter(users) { name ->
             val intent = Intent(this, ChatActivity::class.java)
@@ -75,8 +80,15 @@ class Homescreen : AppCompatActivity() {
                     socket.emit("search_users", query)
                 } else {
                     // Hide all search results if search bar is empty
-                    users.clear()
-                    adapter.notifyDataSetChanged()
+                    lifecycleScope.launch {
+                        val chattedUsers = withContext(Dispatchers.IO) {
+                            messageDao.getUsersChattedWith(username)
+                        }
+
+                        users.clear()
+                        users.addAll(chattedUsers)
+                        adapter.notifyDataSetChanged()
+                    }
                 }
             }
 
@@ -91,6 +103,21 @@ class Homescreen : AppCompatActivity() {
                 users.add(searchResult.getString(i))
             }
             runOnUiThread { adapter.notifyDataSetChanged() }
+        }
+        searchInputLayout.setEndIconOnClickListener {
+            val searchEditText = findViewById<TextInputEditText>(R.id.searchBar)
+
+            searchEditText.text?.clear()  // Manually clear if needed
+            // Reload chat list
+            lifecycleScope.launch {
+                val chattedUsers = withContext(Dispatchers.IO) {
+                    messageDao.getUsersChattedWith(username)
+                }
+
+                users.clear()
+                users.addAll(chattedUsers)
+                adapter.notifyDataSetChanged()
+            }
         }
 
         logout.setOnClickListener {
@@ -108,6 +135,7 @@ class Homescreen : AppCompatActivity() {
         }
 
     }
+
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {

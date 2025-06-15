@@ -21,12 +21,12 @@
             android:layout_height="wrap_content"
             android:text="Logout"
             android:layout_gravity="end"
-
             android:layout_marginBottom="12dp"
             android:textColor="@android:color/white" />
 
-        <!-- Search Bar with Rounded Outline -->
+        <!-- Search Bar with Search Icon and Close Button -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/searchInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
@@ -34,9 +34,11 @@
             app:boxCornerRadiusTopEnd="24dp"
             app:boxCornerRadiusBottomStart="24dp"
             app:boxCornerRadiusBottomEnd="24dp"
-            app:startIconDrawable="@android:drawable/ic_menu_search">
+            app:startIconDrawable="@android:drawable/ic_menu_search"
+            app:endIconMode="clear_text">
 
-            <com.google.android.material.textfield.TextInputEditText
+
+        <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/searchBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
