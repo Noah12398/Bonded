@@ -146,6 +146,10 @@ class Homescreen : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        SessionManager.autoLogin(this)
+
+
+        // ✅ Reload chat list
         lifecycleScope.launch {
             val chattedUsers = withContext(Dispatchers.IO) {
                 messageDao.getUsersChattedWith(username)
@@ -156,5 +160,6 @@ class Homescreen : AppCompatActivity() {
             adapter.notifyDataSetChanged()
         }
     }
+
 
 }

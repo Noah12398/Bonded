@@ -17,17 +17,23 @@ import java.net.URISyntaxException
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import org.json.JSONObject
+
+
 object SocketHandler {
     private lateinit var socket: Socket
-    private val TAG = "SocketHandler"
+    private const val TAG = "SocketHandler"
 
     fun isInitialized(): Boolean {
         return ::socket.isInitialized
     }
 
+    fun isConnected(): Boolean {
+        return isInitialized() && socket.connected()
+    }
+
     @Synchronized
     fun setSocket(serverUrl: String) {
-        Log.d(TAG, "SocketHandler::setSocket called")
+        Log.d(TAG, "setSocket() called with URL: $serverUrl")
         if (::socket.isInitialized) {
             Log.d(TAG, "Socket already initialized")
             return
@@ -43,16 +49,15 @@ object SocketHandler {
             }
 
             socket = IO.socket(serverUrl, options)
-            Log.d(TAG, "Socket created for URL: $serverUrl")
+            Log.d(TAG, "Socket created successfully")
         } catch (e: URISyntaxException) {
-            Log.e(TAG, "Invalid URI: $serverUrl", e)
+            Log.e(TAG, "Invalid URI for socket", e)
             throw e
         }
     }
 
     @Synchronized
     fun getSocket(): Socket {
-        Log.d(TAG, "SocketHandler::getSocket called")
         if (!::socket.isInitialized) {
             throw IllegalStateException("Socket not initialized. Call setSocket() first.")
         }
@@ -61,18 +66,22 @@ object SocketHandler {
 
     @Synchronized
     fun establishConnection() {
-        if (::socket.isInitialized && !socket.connected()) {
-            Log.d(TAG, "Establishing socket connection...")
-            socket.connect()
-        } else if (::socket.isInitialized && socket.connected()) {
-            Log.d(TAG, "Socket already connected")
+        if (::socket.isInitialized) {
+            if (!socket.connected()) {
+                Log.d(TAG, "Connecting socket...")
+                socket.connect()
+            } else {
+                Log.d(TAG, "Socket already connected")
+            }
+        } else {
+            Log.w(TAG, "establishConnection() called before socket was initialized")
         }
     }
 
     @Synchronized
     fun closeConnection() {
         if (::socket.isInitialized) {
-            Log.d(TAG, "Closing socket connection...")
+            Log.d(TAG, "Disconnecting socket and removing all listeners...")
             socket.disconnect()
             socket.off()
         }

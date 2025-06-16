@@ -92,5 +92,7 @@ class MyApp : Application() {
         } catch (e: Exception) {
             Log.e("DB_FLOW", "Failed to save message", e)
         }
+
     }
+
 }

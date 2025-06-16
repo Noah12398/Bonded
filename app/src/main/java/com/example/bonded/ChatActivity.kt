@@ -158,6 +158,8 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        SessionManager.autoLogin(this)
+
     }
 
 
