@@ -7,6 +7,8 @@ import org.json.JSONObject
 import io.socket.client.Socket
 
 object SessionManager {
+    var hasEmittedLogin = false
+
     fun autoLogin(context: Context) {
         val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         val sharedPref = EncryptedSharedPreferences.create(
@@ -27,24 +29,32 @@ object SessionManager {
 
             val socket = SocketHandler.getSocket()
 
-            socket.off("login_success")
-            socket.off("login_error")
+            socket.off(Socket.EVENT_DISCONNECT)
+            socket.on(Socket.EVENT_DISCONNECT) {
+                hasEmittedLogin = false // reset on disconnect
+            }
 
             if (!socket.connected()) {
-                SocketHandler.establishConnection()
                 socket.once(Socket.EVENT_CONNECT) {
+                    if (!hasEmittedLogin) {
+                        val loginData = JSONObject().apply {
+                            put("username", savedUsername)
+                            put("password", savedPassword)
+                        }
+                        socket.emit("register", loginData)
+                        hasEmittedLogin = true
+                    }
+                }
+                SocketHandler.establishConnection()
+            } else {
+                if (!hasEmittedLogin) {
                     val loginData = JSONObject().apply {
                         put("username", savedUsername)
                         put("password", savedPassword)
                     }
                     socket.emit("register", loginData)
+                    hasEmittedLogin = true
                 }
-            } else {
-                val loginData = JSONObject().apply {
-                    put("username", savedUsername)
-                    put("password", savedPassword)
-                }
-                socket.emit("register", loginData)
             }
         }
     }

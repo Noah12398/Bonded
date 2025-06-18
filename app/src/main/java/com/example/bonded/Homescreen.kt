@@ -123,6 +123,9 @@ class Homescreen : AppCompatActivity() {
         }
 
         logout.setOnClickListener {
+            SessionManager.hasEmittedLogin = false
+            SocketHandler.closeConnection()
+
             val sharedPref = EncryptedSharedPreferences.create(
                 "secure_user_session",
                 MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
