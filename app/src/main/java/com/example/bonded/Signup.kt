@@ -54,7 +54,7 @@ class Signup : AppCompatActivity() {
                 socket.once("signup_success") {
                     runOnUiThread {
                         Toast.makeText(this, "Signup successful! Please login.", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, Login::class.java))
+                        startActivity(Intent(this, LoginActivity::class.java))
                         finish()
                     }
                 }

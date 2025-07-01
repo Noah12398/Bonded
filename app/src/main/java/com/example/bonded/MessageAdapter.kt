@@ -9,7 +9,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
-import com.squareup.picasso.Picasso
 
 class MessageAdapter(
     private var messages: MutableList<Message>,
@@ -81,7 +80,7 @@ class MessageAdapter(
                     withContext(Dispatchers.Main) {
                         holder.linkTitle.text = title
                         if (imageUrl.isNotEmpty()) {
-                            Picasso.get().load(imageUrl).into(holder.linkImage)
+                        //    Picasso.get().load(imageUrl).into(holder.linkImage)
                         } else {
                             holder.linkImage.visibility = View.GONE
                         }

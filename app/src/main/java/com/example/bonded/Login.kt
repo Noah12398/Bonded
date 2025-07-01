@@ -2,7 +2,6 @@ package com.example.bonded
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +16,19 @@ import java.net.URISyntaxException
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import org.json.JSONObject
-
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 
 object SocketHandler {
     private lateinit var socket: Socket
@@ -90,14 +101,11 @@ object SocketHandler {
 
 
 
-class Login : AppCompatActivity() {
-    private lateinit var editUser: EditText
-    private lateinit var editPassword: EditText
-    private lateinit var login: Button
-    private lateinit var signup: Button
-    private val TAG = "LoginActivity"
 
-    // Encrypted SharedPreferences
+class LoginActivity : ComponentActivity() {
+    private val TAG = "LoginCompose"
+    private val context by lazy { this }
+
     private val sharedPref by lazy {
         val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         EncryptedSharedPreferences.create(
@@ -111,45 +119,19 @@ class Login : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
 
-        editUser = findViewById(R.id.Username)
-        editPassword = findViewById(R.id.password)
-        login = findViewById(R.id.button)
-        signup = findViewById(R.id.signup)
+        val savedUsername = sharedPref.getString("username", "") ?: ""
+        val savedPassword = sharedPref.getString("password", "") ?: ""
+        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
 
-        checkExistingSession()
-
-        login.setOnClickListener {
-            val username = editUser.text.toString().trim()
-            val password = editPassword.text.toString().trim()
-
-            if (username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please enter both username and password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            login.isEnabled = false
-            login.text = "Logging in..."
-            performLogin(username, password)
+        if (isLoggedIn && savedUsername.isNotEmpty() && savedPassword.isNotEmpty()) {
+            performLogin(savedUsername, savedPassword)
         }
 
-        signup.setOnClickListener {
-            startActivity(Intent(this, Signup::class.java))
-        }
-    }
-
-    private fun checkExistingSession() {
-        try {
-            val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-            val savedUsername = sharedPref.getString("username", "")
-            val savedPassword = sharedPref.getString("password", "")
-
-            if (isLoggedIn && !savedUsername.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
-                performLogin(savedUsername, savedPassword)
+        setContent {
+            LoginScreen { username, password ->
+                performLogin(username, password)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking existing session", e)
         }
     }
 
@@ -186,8 +168,7 @@ class Login : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Login error", e)
                 runOnUiThread {
-                    resetLoginButton()
-                    Toast.makeText(this@Login, "Connection failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@LoginActivity, "Connection failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -196,37 +177,26 @@ class Login : AppCompatActivity() {
     private fun setupSocketListeners(socket: Socket, username: String, password: String) {
         socket.on("login_success") {
             runOnUiThread {
-                try {
-                    with(sharedPref.edit()) {
-                        putBoolean("isLoggedIn", true)
-                        putString("username", username)
-                        putString("password", password) // Securely stored
-                        apply()
-                    }
-
-                    val intent = Intent(this@Login, Homescreen::class.java)
-                    intent.putExtra("username", username)
-                    startActivity(intent)
-                    finish()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error handling login success", e)
-                    resetLoginButton()
+                with(sharedPref.edit()) {
+                    putBoolean("isLoggedIn", true)
+                    putString("username", username)
+                    putString("password", password)
+                    apply()
                 }
+
+                val intent = Intent(this@LoginActivity, Homescreen::class.java)
+                intent.putExtra("username", username)
+                startActivity(intent)
+                finish()
             }
         }
 
         socket.on("login_error") { args ->
             runOnUiThread {
-                resetLoginButton()
                 val errorMsg = if (args.isNotEmpty()) args[0].toString() else "Login failed"
-                Toast.makeText(this@Login, errorMsg, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@LoginActivity, errorMsg, Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun resetLoginButton() {
-        login.isEnabled = true
-        login.text = "Login"
     }
 
     override fun onDestroy() {

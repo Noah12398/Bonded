@@ -34,7 +34,7 @@
             android:label="@string/title_activity_signup"
             android:theme="@style/Theme.Bonded" />
         <activity
-            android:name=".Login"
+            android:name=".LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.Bonded">
