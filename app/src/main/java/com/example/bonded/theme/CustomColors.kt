@@ -22,7 +22,8 @@ data class CustomColors(
     val primary: Color,
     val text: Color,
     val hint: Color,
-    val buttonText: Color
+    val buttonText: Color,
+    val textSecondary: Color
 )
 
 @Composable
@@ -34,7 +35,8 @@ fun appColors(): CustomColors {
             primary = DarkPrimary,
             text = DarkText,
             hint = DarkHint,
-            buttonText = DarkButtonText
+            buttonText = DarkButtonText,
+            textSecondary = Color.Gray.copy(alpha = 0.9f),
         )
     } else {
         CustomColors(
@@ -43,7 +45,8 @@ fun appColors(): CustomColors {
             primary = LightPrimary,
             text = LightText,
             hint = LightHint,
-            buttonText = LightButtonText
+            buttonText = LightButtonText,
+            textSecondary = Color.Gray.copy(alpha = 0.3f),
         )
     }
 }

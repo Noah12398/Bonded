@@ -95,6 +95,7 @@ dependencies {
 
     // Other Libraries
     implementation("org.jsoup:jsoup:1.15.3")
+    implementation("androidx.compose.foundation:foundation:1.4.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
