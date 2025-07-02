@@ -2,7 +2,7 @@ package com.example.bonded
 
 import android.app.Application
 import android.util.Log
-import io.socket.client.Socket
+import com.example.bonded.ui.login.SocketHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

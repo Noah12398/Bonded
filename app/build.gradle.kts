@@ -52,18 +52,24 @@ android {
 }
 
 dependencies {
-    // Jetpack Compose BOM (manages all Compose versions)
+    // Jetpack Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    implementation("io.coil-kt:coil-compose:2.4.0") // Latest Coil version
+    implementation("androidx.compose.material3:material3")
+
+    // ✅ Add this line
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Coil
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
     // Compose Core
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
 
     // Activity Compose
     implementation("androidx.activity:activity-compose:1.9.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")

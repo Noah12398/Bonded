@@ -1,10 +1,11 @@
-package com.example.bonded
+package com.example.bonded.chat
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.bonded.R
 
 class UserAdapter(private val userList: List<String>, private val clickListener: (String) -> Unit) :
     RecyclerView.Adapter<UserAdapter.UserViewHolder>() {

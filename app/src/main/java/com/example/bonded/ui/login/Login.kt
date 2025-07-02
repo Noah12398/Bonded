@@ -1,10 +1,8 @@
-package com.example.bonded
+package com.example.bonded.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 //import com.google.firebase.auth.FirebaseAuth
 import io.socket.client.IO
@@ -18,24 +16,14 @@ import androidx.security.crypto.MasterKeys
 import org.json.JSONObject
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
+import com.example.bonded.ui.home.Homescreen
 
 object SocketHandler {
     private lateinit var socket: Socket
     private const val TAG = "SocketHandler"
 
     fun isInitialized(): Boolean {
-        return ::socket.isInitialized
+        return SocketHandler::socket.isInitialized
     }
 
     fun isConnected(): Boolean {
@@ -45,7 +33,7 @@ object SocketHandler {
     @Synchronized
     fun setSocket(serverUrl: String) {
         Log.d(TAG, "setSocket() called with URL: $serverUrl")
-        if (::socket.isInitialized) {
+        if (SocketHandler::socket.isInitialized) {
             Log.d(TAG, "Socket already initialized")
             return
         }
@@ -69,7 +57,7 @@ object SocketHandler {
 
     @Synchronized
     fun getSocket(): Socket {
-        if (!::socket.isInitialized) {
+        if (!SocketHandler::socket.isInitialized) {
             throw IllegalStateException("Socket not initialized. Call setSocket() first.")
         }
         return socket
@@ -77,7 +65,7 @@ object SocketHandler {
 
     @Synchronized
     fun establishConnection() {
-        if (::socket.isInitialized) {
+        if (SocketHandler::socket.isInitialized) {
             if (!socket.connected()) {
                 Log.d(TAG, "Connecting socket...")
                 socket.connect()
@@ -91,7 +79,7 @@ object SocketHandler {
 
     @Synchronized
     fun closeConnection() {
-        if (::socket.isInitialized) {
+        if (SocketHandler::socket.isInitialized) {
             Log.d(TAG, "Disconnecting socket and removing all listeners...")
             socket.disconnect()
             socket.off()
@@ -129,10 +117,17 @@ class LoginActivity : ComponentActivity() {
         }
 
         setContent {
-            LoginScreen { username, password ->
-                performLogin(username, password)
+            UnifiedAuthScreen { username, password, email ->
+                if (email == null) {
+                    // Login flow
+                    performLogin(username, password)
+                } else {
+                    // Signup flow
+                    performSignup(username, password, email)
+                }
             }
         }
+
     }
 
     private fun performLogin(username: String, password: String) {
@@ -167,6 +162,58 @@ class LoginActivity : ComponentActivity() {
                 socket.emit("register", credentials)
             } catch (e: Exception) {
                 Log.e(TAG, "Login error", e)
+                runOnUiThread {
+                    Toast.makeText(this@LoginActivity, "Connection failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+    private fun performSignup(username: String, password: String, email: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (!SocketHandler.isInitialized()) {
+                    SocketHandler.setSocket("https://bonded-server-301t.onrender.com/")
+                }
+
+                val socket = SocketHandler.getSocket()
+
+                socket.off("signup_success")
+                socket.off("signup_error")
+
+                socket.once("signup_success") {
+                    runOnUiThread {
+                        Toast.makeText(this@LoginActivity, "Signup successful!", Toast.LENGTH_SHORT).show()
+                        performLogin(username, password)
+                    }
+                }
+
+                socket.once("signup_error") { args ->
+                    runOnUiThread {
+                        val errorMsg = if (args.isNotEmpty()) args[0].toString() else "Signup failed"
+                        Toast.makeText(this@LoginActivity, errorMsg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                if (!socket.connected()) {
+                    SocketHandler.establishConnection()
+                    var waitTime = 0
+                    while (!socket.connected() && waitTime < 5000) {
+                        delay(100)
+                        waitTime += 100
+                    }
+                    if (!socket.connected()) throw Exception("Failed to connect to server")
+                }
+
+                val signupData = JSONObject().apply {
+                    put("username", username)
+                    put("password", password)
+                    put("email", email)
+                }
+
+                socket.emit("signup", signupData)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Signup error", e)
                 runOnUiThread {
                     Toast.makeText(this@LoginActivity, "Connection failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }

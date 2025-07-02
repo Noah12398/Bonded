@@ -1,12 +1,12 @@
-package com.example.bonded
+package com.example.bonded.chat
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.bonded.R
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 

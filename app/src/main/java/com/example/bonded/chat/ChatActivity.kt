@@ -1,11 +1,6 @@
-package com.example.bonded
+package com.example.bonded.chat
 import android.content.Intent
 import android.util.Log
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.IntentFilter
-import android.os.Build
-import com.example.bonded.Message
 
 import android.os.Bundle
 import android.widget.Button
@@ -18,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.socket.client.Socket
 import org.json.JSONObject
-import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,6 +23,13 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import androidx.appcompat.widget.Toolbar
+import com.example.bonded.AppDatabase
+import com.example.bonded.LinksActivity
+import com.example.bonded.MessageDao
+import com.example.bonded.MessageEntity
+import com.example.bonded.R
+import com.example.bonded.SessionManager
+import com.example.bonded.ui.login.SocketHandler
 
 data class Message(
     val id: Int=0,

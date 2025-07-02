@@ -19,22 +19,22 @@
 
         <activity android:name=".LinksActivity" />
         <activity
-            android:name=".ChatActivity"
+            android:name=".chat.ChatActivity"
             android:exported="true"
             android:label="@string/title_activity_chat"
             android:theme="@style/Theme.Bonded" />
         <activity
-            android:name=".Homescreen"
+            android:name=".ui.home.Homescreen"
             android:exported="false"
             android:label="Homescreen"
             android:theme="@style/Theme.Bonded" />
         <activity
-            android:name=".Signup"
+            android:name=".ui.login.Signup"
             android:exported="false"
             android:label="@string/title_activity_signup"
             android:theme="@style/Theme.Bonded" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.login.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.Bonded">

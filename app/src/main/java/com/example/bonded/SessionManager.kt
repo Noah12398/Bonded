@@ -3,6 +3,7 @@ package com.example.bonded
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import com.example.bonded.ui.login.SocketHandler
 import org.json.JSONObject
 import io.socket.client.Socket
 
